@@ -1,0 +1,15 @@
+{
+  "n_rows": 10626,
+  "n_cols": 11,
+  "exact_duplicate_rows": 0,
+  "duplicate_feature_rows": 1520,
+  "duplicate_feature_share": 0.143,
+  "n_duplicate_groups": 9106,
+  "leakage_max_abs_error": 0.5,
+  "leakage_share_within_1": 1.0,
+  "price_skew": 6.525,
+  "log_price_skew": 1.875,
+  "n_locations": 243,
+  "other_location_share": 0.2088,
+  "built_up_area_equals_area_share": 0.2861
+}

@@ -1,0 +1,24 @@
+services:
+  app:
+    build: .
+    ports: ["8501:8501"]
+    volumes:
+      - ./models:/app/models
+      - ./reports:/app/reports
+    command: streamlit run app/streamlit_app.py --server.port=8501 --server.address=0.0.0.0
+
+  api:
+    build: .
+    ports: ["8000:8000"]
+    volumes:
+      - ./models:/app/models
+      - ./reports:/app/reports
+    command: uvicorn app.api.main:app --host 0.0.0.0 --port 8000
+
+  train:
+    build: .
+    profiles: ["train"]
+    volumes:
+      - ./models:/app/models
+      - ./reports:/app/reports
+    command: python -m property_price.train

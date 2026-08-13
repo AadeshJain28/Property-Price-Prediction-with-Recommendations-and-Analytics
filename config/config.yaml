@@ -1,0 +1,46 @@
+# Single source of truth for the pipeline. Nothing below is duplicated in code.
+data:
+  raw: data/raw/final_data.csv
+  latlong: data/raw/latlong.csv
+  processed: data/processed/model_frame.parquet
+
+target: price          # INR crore
+target_transform: log1p
+
+# price_per_sqft is an exact algebraic function of the target (see reports/data_audit.md).
+# `area` is its other factor, so keeping both reconstructs `price` exactly.
+# These are refused by the feature builder, not merely omitted.
+banned_features:
+  - price_per_sqft
+  - area
+
+numeric_features: [bedroom, bath, balcony, built_up_area]
+categorical_features: [property_type, availability, location, area_type]
+
+split:
+  test_size: 0.2
+  seed: 42
+  # 1,520 rows share an identical feature vector with another row but carry a
+  # different price. A random split puts near-copies on both sides, so the
+  # grouped split keeps every duplicate-feature cluster wholly in one fold.
+  group_by_duplicate_features: true
+
+cv:
+  n_splits: 5
+  seed: 42
+
+tuning:
+  n_iter: 50
+  seed: 42
+
+recommender:
+  top_k: 5
+  # Weights for the blended similarity; must sum to 1.0 (asserted at load).
+  weights:
+    location: 0.4
+    features: 0.4
+    price: 0.2
+
+paths:
+  models: models
+  reports: reports

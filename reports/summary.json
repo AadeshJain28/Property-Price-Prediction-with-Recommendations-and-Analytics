@@ -1,0 +1,36 @@
+{
+  "n_rows": 10626,
+  "split": {
+    "train": 8476,
+    "test": 2150,
+    "strategy": "grouped_by_duplicate_features"
+  },
+  "best_model": "xgboost",
+  "tuned_cv_r2_log": 0.7931,
+  "tuned_test": {
+    "r2_log": 0.8265,
+    "r2_price": 0.7196,
+    "mae_price": 0.2243,
+    "rmse_price": 0.5928,
+    "mape_price": 21.63,
+    "median_ape_price": 15.78
+  },
+  "tuned_params": {
+    "regressor__subsample": 0.8,
+    "regressor__n_estimators": 600,
+    "regressor__min_child_weight": 3,
+    "regressor__max_depth": 7,
+    "regressor__learning_rate": 0.03,
+    "regressor__gamma": 0,
+    "regressor__colsample_bytree": 0.6
+  },
+  "optimism_from_shuffled_split_r2_log": -0.0214,
+  "xgb_minus_rf_r2_log": 0.0354,
+  "recommender": {
+    "k": 5,
+    "precision_at_k": 0.5907,
+    "location_hit_rate": 0.9607,
+    "median_price_gap_pct": 19.05,
+    "n_queries": 300
+  }
+}

@@ -1,0 +1,21 @@
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+*.joblib
+models/*.joblib
+data/processed/*
+!data/processed/.gitkeep
+reports/figures/*.png
+.DS_Store
+.ipynb_checkpoints/
+
+# --- deployment ---------------------------------------------------------------
+# The scoring model ships with the repo so a hosted app has no cold-start training
+# step. It is small; the exception below overrides the blanket *.joblib rule above.
+!models/price_model.joblib
+# The recommender pickle is 22 MB and refits in ~1s; built in-process instead.
+models/recommender.joblib
