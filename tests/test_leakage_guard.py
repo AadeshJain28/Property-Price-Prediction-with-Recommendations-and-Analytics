@@ -92,12 +92,43 @@ def test_config_rejects_banned_feature_in_feature_list(cfg):
 def test_leaked_model_is_near_perfect_so_the_guard_is_load_bearing(raw):
     """Demonstrates what the guard prevents, using closed-form arithmetic only.
 
-    Reconstructing price from the two banned columns should recover the target to
-    rounding error -- R^2 indistinguishable from 1. That is the score a "model"
-    would report if the guard were removed, which is why the guard exists.
+    Reconstructing price from the two banned columns recovers the target to rounding
+    error -- R^2 indistinguishable from 1. That is the score a "model" would report
+    if the guard were removed, which is why the guard exists.
     """
     reconstructed = raw["price_per_sqft"] * raw["area"] / 1e7
     y = raw["price"].to_numpy(float)
     r2 = 1 - ((y - reconstructed) ** 2).sum() / ((y - y.mean()) ** 2).sum()
     assert r2 > 0.9999, f"expected near-perfect reconstruction, got {r2}"
-    assert np.abs(y - reconstructed).max() < 0.01
+
+
+def test_reconstruction_error_matches_the_rounding_bound_exactly(raw):
+    """The residual is rounding, and the bound is derivable rather than guessed.
+
+    `price_per_sqft` is stored rounded to whole rupees, so
+
+        price_per_sqft = round(price * 1e7 / area)   =>   |round(x) - x| <= 0.5
+
+    and the reconstruction error in crore is that residual scaled by `area`:
+
+        |price - price_per_sqft * area / 1e7|  <=  0.5 * area / 1e7
+
+    The bound therefore GROWS with area. An earlier version of this test asserted a
+    flat `< 0.01 crore` and failed in CI at 0.0386 -- on a 1,306,800 sqft plot listed
+    at 2 rupees/sqft, where the bound is 0.065. The constant was the bug; the data
+    was fine. Asserting the derived inequality row by row is both stricter and
+    correct, and it cannot go stale if the dataset changes.
+    """
+    residual = np.abs(raw["price"] - raw["price_per_sqft"] * raw["area"] / 1e7)
+    bound = 0.5 * raw["area"] / 1e7
+
+    violations = int((residual > bound + 1e-12).sum())
+    assert violations == 0, f"{violations} rows exceed the rounding bound"
+
+    # Guard the guard: the bound must actually be tight somewhere, otherwise this
+    # test would keep passing even if the identity stopped holding.
+    assert (residual > 0.5 * bound).any(), "bound is loose everywhere; identity may have changed"
+
+    # And the error is negligible where it matters -- typical listings, not land plots.
+    typical = raw["area"] < 10_000
+    assert (residual[typical] / raw["price"][typical]).max() < 0.01

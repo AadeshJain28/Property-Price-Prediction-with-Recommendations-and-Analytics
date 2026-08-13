@@ -64,3 +64,22 @@ class Config:
 
     def data_path(self, key: str) -> Path:
         return project_root() / self.raw["data"][key]
+
+
+def library_versions() -> dict[str, str]:
+    """Versions that produced the artefact.
+
+    A scikit-learn pickle is not portable across versions. Recording this makes a
+    mismatch a legible message rather than an AttributeError from deep inside
+    joblib -- which is how it presents when CI or a hosted app installs a newer
+    scikit-learn than the one that did the training.
+    """
+    import platform
+
+    versions = {"python": platform.python_version()}
+    for name in ("sklearn", "numpy", "scipy", "pandas", "joblib", "xgboost"):
+        try:
+            versions[name] = __import__(name).__version__
+        except Exception:  # noqa: BLE001
+            versions[name] = "absent"
+    return versions

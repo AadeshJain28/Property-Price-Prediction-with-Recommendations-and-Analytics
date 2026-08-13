@@ -90,6 +90,28 @@ set exactly once, at the end. Both numbers are reported so the gap between them 
 | Rows with `location == "other"` | 20.9% | A fifth of the data has no usable location signal |
 | `built_up_area == area` | 28.6% | Imputed rather than observed for these rows |
 | `property_type` balance | 9,697 flats / 929 houses | Houses are 8.7% of the data; per-segment error should be reported |
+| `area` range | 1 – **1,306,800** sqft | 5 rows exceed 100,000 sqft — land parcels, not flats |
+
+### The largest listings are land, and they distort absolute error
+
+Five rows have `area` above 100,000 sqft, the largest at **1,306,800 sqft listed at 2
+rupees/sqft**. These are land parcels sharing a table with apartments.
+
+They surfaced through a failing test rather than an EDA plot. The leakage test asserted
+that reconstructing price from the banned columns lands within 0.01 crore of the truth;
+it failed in CI at 0.0386. The data was fine — the constant was wrong. Because
+`price_per_sqft` is rounded to whole rupees, the reconstruction error in crore is
+
+```
+|price - price_per_sqft x area / 1e7|  <=  0.5 x area / 1e7
+```
+
+which **grows with area**: 0.065 crore on the 1.3M sqft plot, versus 0.00005 on a typical
+1,000 sqft flat. A flat tolerance was never the right test. The assertion is now the
+derived inequality, checked row by row — it holds for all 10,626 rows, is tight on 5,227
+of them, and cannot go stale if the data changes.
+
+Relative error on the 10,595 listings under 10,000 sqft stays below **3.2e-04**.
 
 ## What was wrong, and what caught it
 
@@ -100,6 +122,8 @@ set exactly once, at the end. Both numbers are reported so the gap between them 
 | "Tuning improved the model" | **Not supported** — default XGBoost scored 0.8373 held-out, the tuned model 0.8265 | `reports/leaderboard.csv` vs `summary.json` |
 | Reporting a single R² | Unsafe — SVR scores 0.7112 in log space and **−0.4671** on price | `reports/leaderboard.csv` |
 | Recommender "using cosine similarity" | Was unevaluated — now precision@5 = 0.591, location hit-rate 0.961 | `recommend.PropertyRecommender.evaluate` |
+| *My* leakage-test tolerance of 0.01 crore | **Wrong** — a flat bound on an error that scales with `area`; failed CI at 0.0386 | `tests/test_leakage_guard.py`, now asserting the derived bound |
+| *My* guess that CI failed on a scikit-learn version mismatch | **Wrong** — it was the tolerance above; the artefact never got loaded | the CI log |
 
 ### A dead input in the dashboard
 

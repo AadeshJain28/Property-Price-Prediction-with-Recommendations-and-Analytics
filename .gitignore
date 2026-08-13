@@ -19,3 +19,7 @@ reports/figures/*.png
 !models/price_model.joblib
 # The recommender pickle is 22 MB and refits in ~1s; built in-process instead.
 models/recommender.joblib
+
+# build output from `pip install -e .`
+*.egg-info/
+src/*.egg-info/

@@ -136,7 +136,12 @@ def main() -> None:
 
     # --- tuning + single-touch test evaluation ------------------------------
     best_model, best_params, cv_score, test_scores = tune_best(cfg, train, test)
-    joblib.dump({"pipeline": best_model, "config": cfg.raw}, models / "price_model.joblib")
+    from .config import library_versions
+
+    joblib.dump(
+        {"pipeline": best_model, "config": cfg.raw, "versions": library_versions()},
+        models / "price_model.joblib",
+    )
 
     p2_held = test_scores.r2_price < test_scores.r2_log
     xgb_row = lb.loc[lb.model == "xgboost", "r2_log"]
