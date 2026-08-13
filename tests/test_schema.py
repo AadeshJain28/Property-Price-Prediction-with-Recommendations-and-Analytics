@@ -15,8 +15,6 @@ from __future__ import annotations
 import pandas as pd
 import pytest
 
-from property_price.config import Config
-from property_price.data import load_raw
 from property_price.features import (
     SchemaError,
     build_matrix,

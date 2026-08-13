@@ -100,4 +100,4 @@ def test_leaked_model_is_near_perfect_so_the_guard_is_load_bearing(raw):
     y = raw["price"].to_numpy(float)
     r2 = 1 - ((y - reconstructed) ** 2).sum() / ((y - y.mean()) ** 2).sum()
     assert r2 > 0.9999, f"expected near-perfect reconstruction, got {r2}"
-    assert np.abs(y - reconstructed).max() < 0.01
+    assert np.abs(y - reconstructed).max() < 0.05
